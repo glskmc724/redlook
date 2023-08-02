@@ -2,6 +2,7 @@ import settings
 import outlook
 import redmine
 import base64
+import hashlib
 import redminelib
 import time
 from bs4 import BeautifulSoup
@@ -24,10 +25,11 @@ class Redlook:
                 return attachment.id
 
     def do(self):
-        idx = 0
         for mail in self.Inbox:
             mail_items = self.Outlook.get_mail(mail)
-            title = base64.b64encode(mail_items["Subject"].encode()).decode()
+            print("{}".format(mail_items["Subject"]))
+            #title = base64.b64encode(mail_items["Subject"].encode()).decode()
+            title = hashlib.md5(mail_items["Subject"].encode()).hexdigest()
             redmine_uploads = list()
             attachments = dict()
             for attachment in mail_items["Attachments"]:
@@ -40,7 +42,7 @@ class Redlook:
                 redmine_uploads.append(redmine_upload)
                 attachments[cid] = attachment_items["FileName"]
             #self.mails[title] = mail_items
-            htmlbody = "{{html\n" + mail_items["HTMLbody"] + "}}"
+            htmlbody = "{{html\n" + mail_items["HTMLbody"] + "\n}}"
             wiki_page = None
             try:
                 wiki_page = self.Redmine.create_wiki_page(mail_items["Subject"], htmlbody, "Wiki", redmine_uploads)
@@ -54,7 +56,7 @@ class Redlook:
                 filename = attachments[src]
                 id = self.get_file_id(filename, list(wiki_page.attachments))
                 img["src"] = "/redmine/attachments/download/{}/{}".format(id, filename)
-            wiki_page.text = "{{html\n" + str(soup) + "}}"
+            wiki_page.text = "{{html\n" + str(soup) + "\n}}"
             wiki_page.save()
             
 if __name__ == "__main__":
