@@ -17,9 +17,10 @@ class Outlook:
                 "Attachments": mail.Attachments}
         return ret
     
-    def get_attachment(self, attachment):
+    def get_attachment(self, title, attachment):
+        path = "{}/{}".format(self.attachments_path, title)
         ret = {"FileName": attachment.FileName,
-                "Path": "{}/{}".format(self.attachments_path, attachment.FileName),
+                "Path": "{}/{}".format(path, attachment.FileName),
                 "CID": attachment.PropertyAccessor.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F")}
         return ret
     
