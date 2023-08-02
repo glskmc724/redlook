@@ -1,8 +1,5 @@
 import settings
+import outlook
 
 redlook_settings = settings.Configuration(filename = "redlook.conf")
-
-print(redlook_settings.redmine["redmine_address"])
-print(redlook_settings.redmine["redmine_username"])
-print(redlook_settings.redmine["redmine_password"])
-print(redlook_settings.outlook["outlook_folder"])
+Outlook = outlook.Outlook(redlook_settings.outlook["outlook_folder"])
