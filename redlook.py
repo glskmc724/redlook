@@ -5,7 +5,7 @@ import base64
 import hashlib
 import redminelib
 import time
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 
 class Redlook:
     def __init__(self):
@@ -27,7 +27,8 @@ class Redlook:
     def do(self):
         for mail in self.Inbox:
             mail_items = self.Outlook.get_mail(mail)
-            print("{}".format(mail_items["Subject"]))
+            print("title:{}".format(mail_items["Subject"]))
+            subject = mail_items["Subject"][:32]
             #title = base64.b64encode(mail_items["Subject"].encode()).decode()
             title = hashlib.md5(mail_items["Subject"].encode()).hexdigest()
             redmine_uploads = list()
@@ -42,20 +43,24 @@ class Redlook:
                 redmine_uploads.append(redmine_upload)
                 attachments[cid] = attachment_items["FileName"]
             #self.mails[title] = mail_items
-            htmlbody = "{{html\n" + mail_items["HTMLbody"] + "\n}}"
+            soup = BeautifulSoup(mail_items["HTMLbody"], "html.parser")
+            soup.html.unwrap()
+            soup.head.extract()
+            soup.body.unwrap()
+            htmlbody = "{{html\n" + str(soup) + "\n}}"
             wiki_page = None
             try:
-                wiki_page = self.Redmine.create_wiki_page(mail_items["Subject"], htmlbody, "Wiki", redmine_uploads)
+                wiki_page = self.Redmine.create_wiki_page(subject, htmlbody, "Wiki", redmine_uploads)
             except redminelib.exceptions.ValidationError as e:
                 print("Exception error: {}, skipped".format(e))
-            soup = BeautifulSoup(mail_items["HTMLbody"], "html.parser")
             if (wiki_page == None):
-                wiki_page = self.Redmine.get_wiki_page(mail_items["Subject"])
+                wiki_page = self.Redmine.get_wiki_page(subject)
             for img in soup.find_all("img"):
                 src = img["src"].replace("cid:", "")
                 filename = attachments[src]
                 id = self.get_file_id(filename, list(wiki_page.attachments))
                 img["src"] = "/redmine/attachments/download/{}/{}".format(id, filename)
+                
             wiki_page.text = "{{html\n" + str(soup) + "\n}}"
             wiki_page.save()
             
