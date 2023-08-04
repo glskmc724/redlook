@@ -27,7 +27,7 @@ class Redlook:
     def do(self):
         for mail in self.Inbox:
             mail_items = self.Outlook.get_mail(mail)
-            print("title:{}".format(mail_items["Subject"]))
+            #print("title:{}".format(mail_items["Subject"]))
             subject = mail_items["Subject"][:32]
             #title = base64.b64encode(mail_items["Subject"].encode()).decode()
             title = hashlib.md5(mail_items["Subject"].encode()).hexdigest()
